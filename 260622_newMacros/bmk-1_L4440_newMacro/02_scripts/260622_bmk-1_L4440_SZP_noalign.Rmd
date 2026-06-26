@@ -338,7 +338,7 @@ nest_pandv <- peaks_and_valleys %>%
 
 # A function to calculate the ratio of the value at 1 compared to the mean of -100 and +100
 my_calc2 <- function(df) {
-  df$normalized_intensity[2] / mean(df$normalized_intensity[1], df$normalized_intensity[3])
+  df$normalized_intensity[2] / mean(c(df$normalized_intensity[1], df$normalized_intensity[3]))
 }
 
 # Calculate the ratio for each datapoint

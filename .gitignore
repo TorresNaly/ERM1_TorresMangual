@@ -1,33 +1,60 @@
+# Imaging files
+.dv
+
 # History files
 .Rhistory
 .Rapp.history
 
-# Imaging files
-.dv
-
-# Session data and workspaces
+# Session Data files
 .RData
 .RDataTmp
-*.RData
-*.RDataTmp
 
-# User-specific RStudio configuration files
+# User-specific files
+.Ruserdata
+
+# Example code in package build process
+*-Ex.R
+
+# Output files from R CMD build
+/*.tar.gz
+
+# Output files from R CMD check
+/*.Rcheck/
+
+# RStudio files
 .Rproj.user/
 
-# R environment variables (contains secrets/tokens)
-.Renviron
+# produced vignettes
+vignettes/*.html
+vignettes/*.pdf
 
-# Knitr and R Markdown default cache directories
+# OAuth2 token, saved by the httr package
+.httr-oauth
+
+# knitr and R markdown default cache directories
 *_cache/
 /cache/
 
-# Temporary files created by R Markdown / Quarto
+# Temporary files created by R markdown
 *.utf8.md
 *.knit.md
 
-# Package development temporary files (if applicable)
-/*_cache/
-/meta/
-/src/*.o
-/src/*.so
-/src/*.dll
+# R Environment Variables
+.Renviron
+
+# pkgdown site
+docs/
+
+# translation temp files
+po/*~
+
+# renv
+renv/library/
+renv/local/
+renv/cellar/
+renv/lock/
+renv/python/
+renv/staging/
+
+# macOS
+.DS_Store

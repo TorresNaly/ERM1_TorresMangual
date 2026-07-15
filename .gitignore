@@ -1,0 +1,33 @@
+# History files
+.Rhistory
+.Rapp.history
+
+# Imaging files
+.dv
+
+# Session data and workspaces
+.RData
+.RDataTmp
+*.RData
+*.RDataTmp
+
+# User-specific RStudio configuration files
+.Rproj.user/
+
+# R environment variables (contains secrets/tokens)
+.Renviron
+
+# Knitr and R Markdown default cache directories
+*_cache/
+/cache/
+
+# Temporary files created by R Markdown / Quarto
+*.utf8.md
+*.knit.md
+
+# Package development temporary files (if applicable)
+/*_cache/
+/meta/
+/src/*.o
+/src/*.so
+/src/*.dll

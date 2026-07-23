@@ -6,7 +6,7 @@
 <h2 align="center">erm-1 mRNA and ERM-1 protein co-translationally localize to the plasma membrane through a microtubule and BMK-1-dependent pathway in early <em>C. elegans</em> embryos</h2>
 
 
-**Authors:** Naly Torres<sup>2</sup>\*, Karissa Coleman<sup>2</sup>, Erin Osborne Nishimura<sup>2</sup>†
+**Authors:** Naly Torres<sup>1</sup>\2, Karissa Coleman<sup>2</sup>\3, Erin Osborne Nishimura<sup>2</sup>†
 
 
 

@@ -355,7 +355,7 @@ foldChange_calc <- nest_pandv %>%
   mutate(fc_enrich = map_dbl(data, my_calc2))
 
 # Change some columns to factors
-foldChange_calc$treatment <- as.factor(foldChange_calc$treatment)
+foldChange_calc$treatment <- factor(foldChange_calc$treatment, levels = c("L4440", "bmk-1")) 
 foldChange_calc$channel <- as.factor(foldChange_calc$channel)
 
 # calculate the max & min - figure out how to set the y-axis

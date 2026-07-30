@@ -12,8 +12,7 @@
 
 **Affiliations:**
 
-<sup>1</sup>Quantitative Cell & Molecular Biology, Colorado State University, Fort Collins, CO 80523, USA
-
+<sup>1</sup>Quantitative Cell & Molecular Biology, Colorado State University, Fort Collins, CO 80523, USA \\
 <sup>2</sup>Department of Biochemistry & Molecular Biology, Colorado State University, Fort Collins, CO 80523, USA
 
 **Authors for Correspondence**

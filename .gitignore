@@ -1,6 +1,9 @@
 # Imaging files
 .dv
 
+# .Rproj file 
+*.Rproj
+
 # History files
 .Rhistory
 .Rapp.history

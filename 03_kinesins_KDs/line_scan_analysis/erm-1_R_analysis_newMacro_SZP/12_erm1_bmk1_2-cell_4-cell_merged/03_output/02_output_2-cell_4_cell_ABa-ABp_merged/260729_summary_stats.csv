@@ -1,5 +1,0 @@
-treatment,channel,n,min_log2fc,median_log2fc,mean_log2fc,max_log2fc
-L4440,ch1,22,-0.001,0.191,0.198,0.391
-bmk-1,ch1,26,-0.04,0.218,0.204,0.602
-L4440,ch2,22,0.173,0.615,0.644,1.19
-bmk-1,ch2,26,0.003,0.412,0.466,1.072

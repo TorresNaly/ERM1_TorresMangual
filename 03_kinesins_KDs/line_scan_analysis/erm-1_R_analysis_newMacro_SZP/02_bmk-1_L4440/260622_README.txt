@@ -1,2 +1,0 @@
-bmk-1 and L4440 datafiles are generated from the new macro script
-

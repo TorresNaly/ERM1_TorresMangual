@@ -6,19 +6,23 @@
 <h2 align="center"><em>erm-1</em> mRNA and ERM-1 protein co-translationally localize to the plasma membrane through a microtubule and BMK-1-dependent pathway in early <em>C. elegans</em> embryos</h2>
 
 
-**Authors:** Naly Torres Mangual<sup>1</sup>, Karissa Coleman<sup>2</sup>, Sam Zavislan-Pullaro<sup>2</sup>, Erin Osborne Nishimura<sup>2</sup>†
+#### Authors
+
+Naly Torres Mangual<sup>1</sup>, Karissa Coleman<sup>2</sup>, Sam Zavislan-Pullaro<sup>2</sup>, Erin Osborne Nishimura<sup>2</sup>†
 
 
 
-**Affiliations:**
+#### Affiliations
 
-<sup>1</sup>Quantitative Cell & Molecular Biology, Colorado State University, Fort Collins, CO 80523, USA \\
+<sup>1</sup>Quantitative Cell & Molecular Biology, Colorado State University, Fort Collins, CO 80523, USA \
 <sup>2</sup>Department of Biochemistry & Molecular Biology, Colorado State University, Fort Collins, CO 80523, USA
 
-**Authors for Correspondence**
+#### Authors for Correspondence
+
 †Erin Osborne Nishimura (erin.nishimura@colostate)
 
-**ORCID IDs**
+#### ORCID IDs
+
   * 0000-0002-9984-2384 (N.T.)
   * 0000-0002-1252-267X (K.C.)
   * 0009-0001-6198-8425 (S.Z.P.)

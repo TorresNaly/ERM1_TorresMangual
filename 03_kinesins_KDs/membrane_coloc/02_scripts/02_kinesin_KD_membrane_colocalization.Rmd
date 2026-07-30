@@ -1,0 +1,275 @@
+---
+title: "Enrichment at plasma membrane `r format(Sys.Date(), '%Y-%m-%d')`"
+author: "Naly Torres"
+date: "1/30/2024"
+output:
+  html_document: default
+---
+
+# Plot mRNA and membrane overlap
+
+Part 1 - Load required packages
+
+```{r echo=FALSE, warning=FALSE} 
+
+library(tidyverse)
+library(dunn.test)
+library(rstatix)
+
+```
+
+
+
+
+### Part 2 - assess erm-1 overlap with a membrane marker ###
+
+erm-1 in membranes 
+
+Import the data
+
+```{r}
+
+# Parent directory containing CSV files for all conditions
+parent_directory <- "/Users/nalytorres/Library/CloudStorage/OneDrive-Colostate/OnishLab - NalyTorres/00_2026_ERM1_Torres_et_al/06_GitHub/Fig3_kinesin_KD/Fig3D_kinesin_KD_membrane_coloc/01_input"
+
+
+# Function to read CSV, replace Image ID with CSV name, and modify column names
+read_modify_csv <- function(file_path, subdirectory) {
+  my_df <- read.csv(file_path)
+  my_df$Image_ID <- basename(file_path)
+  my_df$subdirectory <- subdirectory
+  my_df <- my_df[, colnames(my_df) != "X"]
+  current_colnames <- colnames(my_df)
+  new_colnames <- gsub("\\.", " ", current_colnames)
+  colnames(my_df) <- new_colnames
+  return(my_df)
+}
+
+# List all subdirectories (conditions) in the parent directory
+subdirectories <- list.dirs(parent_directory, full.names = FALSE, recursive = FALSE)
+subdirectories
+
+# Initialize an empty list to store data frames
+all_data <- list()
+
+# Loop through subdirectories (conditions)
+for (subdirectory in subdirectories) {
+  # List all CSV files in the current subdirectory
+  csv_files <- list.files(path = file.path(parent_directory, subdirectory), pattern = "*.csv", full.names = TRUE)
+  
+  # Loop through CSV files, read data, replace Image ID, and modify column names
+  for (file_path in csv_files) {
+    current_data <- read_modify_csv(file_path, subdirectory)
+    all_data[[file_path]] <- current_data
+  }
+}
+
+# Combine all data frames into one data frame
+combined_data <- bind_rows(all_data)
+
+str(combined_data)
+
+head(combined_data)
+
+```
+
+### Merge datasets
+
+
+```{r}
+
+# combine the data into date frame.
+# Calculate densities
+# calculate enrichment
+# calculate log2 enrichment
+
+df <- combined_data %>%
+  mutate(
+    # erm-1
+    erm1_membrane_density = `erm 1_mRNA in gfp mask` / gfp_mask_area_pixels,
+    erm1_embryo_density = `erm 1_mRNA total molecules` / embryo_area_pixels,
+    erm1_enrichment = erm1_membrane_density / erm1_embryo_density,
+    log2_erm1 = log2(erm1_enrichment),
+
+    # set-3
+    set3_membrane_density = `set 3_mRNA in gfp mask` / gfp_mask_area_pixels,
+    set3_embryo_density = `set 3_mRNA total molecules` / embryo_area_pixels,
+    set3_enrichment = set3_membrane_density / set3_embryo_density,
+    log2_set3 = log2(set3_enrichment)
+  )
+
+df
+
+# tranform long
+df_long <- df %>%
+  pivot_longer(
+    cols = c(log2_erm1, log2_set3),
+    names_to = "mRNA",
+    values_to = "log2_enrichment"
+  ) %>%
+  mutate(
+    mRNA = recode(mRNA,
+                  log2_erm1 = "erm-1",
+                  log2_set3 = "set-3")
+  )
+
+# Naly's plot 
+# --> Note - this plot cuts off some points 
+# --> Note - the scale_color_manual line throws an error and isn't necessary
+ggplot(df_long, aes(x = subdirectory, y = log2_enrichment, fill = mRNA)) +
+  geom_violin(trim = FALSE, alpha = 0.6, position = position_dodge(width = 0.8)) +
+  geom_boxplot(width = 0.15, outlier.shape = NA, alpha = 0.8,
+               position = position_dodge(width = 0.8)) +
+  geom_jitter(aes(color = mRNA), size = 2,
+              position = position_dodge(width = 0.8), color = "black") +
+  scale_fill_manual(values = c("set-3" = "lightgray", "erm-1" = "darkgray")) +
+  scale_color_manual(values = c("set-3" = "lightgray", "erm-1" = "darkgray")) +
+  scale_y_continuous(
+    limits = c(-2, 2),
+    breaks = seq(-2, 2, by = 0.5)
+  ) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(y = "log2 membrane enrichment (area-normalized)", x = NULL) +
+  theme_classic(base_size = 16) +
+  theme(
+    legend.position = "right",
+    axis.text.x = element_text(size = 10, angle = 90, hjust = 0.5),
+    axis.text.y = element_text(size = 20),
+    axis.title.y = element_text(size = 16)
+  ) +
+  facet_wrap(~mRNA)
+
+
+```
+
+### Obtain metrics and calculate statistics
+
+Filter out NAs, 0s, inf values
+
+Filter out "remove" data
+
+
+
+```{r}
+
+# filter out NA, inf, and remove categories
+df_long_filtered <- df_long %>%
+  filter(subdirectory != "remove") %>%
+  filter(is.finite(log2_enrichment)) %>%
+  filter(`erm 1_mRNA total molecules` != 0) %>%
+  drop_na()
+
+# drop levels
+df_long_filtered$subdirectory <- droplevels.factor(df_long_filtered$subdirectory)
+
+# Calculate the mean log2_enrichment values
+means <- df_long_filtered %>%
+  group_by(mRNA) %>%
+  summarise(mean_log2_enr_val = mean(log2_enrichment, na.rm = TRUE))
+
+# calculate stats using Naly's Wilcox-test using a null parameter. 
+# I tried a few different null parameters, but it made sense to set mu to set-3's value
+
+naly_stats <- df_long_filtered %>%
+  group_by(mRNA, subdirectory) %>%
+  wilcox_test(log2_enrichment ~ 1, mu = -0.369) %>%
+  adjust_pvalue(method = "BH") %>%
+  add_significance()
+
+naly_stats
+
+# Calculate statistics using a two-tailed wilcoxan rank test between +/- bmk-1 RNAi conditions:
+
+stats_erins <- df_long_filtered %>%
+  group_by(mRNA) %>%
+  wilcox_test(log2_enrichment ~ subdirectory) %>%
+  adjust_pvalue(method = "BH") %>%
+  add_significance()
+
+stats_erins
+```
+
+```{r plot}
+
+library(svglite)
+
+df_long_filtered$subdirectory <- factor(
+  df_long_filtered$subdirectory,
+  levels = c("L4440","KLP-19", "KLP-9", "KLP-14","UNC-116")  # <- put your desired order here
+)
+
+
+# Plot the data on a boxplot with jittered datapoints
+ggplot(df_long_filtered, aes(x = subdirectory, y = log2_enrichment, fill = mRNA)) +
+  geom_boxplot(width = 0.5, outlier.shape = NA, alpha = 0.8) +
+  geom_jitter(width = 0.1) +
+  scale_fill_manual(values = c("set-3" = "lightblue", "erm-1" = "darkgray")) +
+  scale_y_continuous(
+    limits = c(-2.5, 2.5)) +
+  geom_hline(yintercept = -0.369, linetype = "dashed") +
+  labs(y = "log2 membrane enrichment (area-normalized)", x = NULL) +
+  theme_classic(base_size = 16) +
+  theme(
+    legend.position = "right",
+    axis.text.x = element_text(size = 10, angle = 90, hjust = 0.5),
+    axis.text.y = element_text(size = 20),
+    axis.title.y = element_text(size = 16)
+  ) +
+  facet_wrap(~mRNA) 
+
+# Save the plot
+
+output_dir <- file.path("..", "03_output")
+if (!dir.exists(output_dir)) {
+  dir.create(output_dir, recursive = TRUE)
+}
+
+today <- format(Sys.Date(), "%y%m%d")
+
+filename_pdf <- file.path(output_dir, paste0(today, "_erm_set3_boxplots.pdf"))
+filename_svg <- file.path(output_dir, paste0(today, "_erm_set3_boxplots.svg"))
+
+# store plot
+p <- ggplot(df_long_filtered, aes(x = subdirectory, y = log2_enrichment, fill = mRNA)) +
+  geom_boxplot(width = 0.5, outlier.shape = NA, alpha = 0.8) +
+  geom_jitter(width = 0.1) +
+  scale_fill_manual(values = c("set-3" = "lightblue", "erm-1" = "darkgray")) +
+  scale_y_continuous(
+    limits = c(-2.5, 2.5)) +
+  geom_hline(yintercept = -0.369, linetype = "dashed") +
+  labs(y = "log2 membrane enrichment (area-normalized)", x = NULL) +
+  theme_classic(base_size = 16) +
+  theme(
+    legend.position = "right",
+    axis.text.x = element_text(size = 10, angle = 90, hjust = 0.5),
+    axis.text.y = element_text(size = 20),
+    axis.title.y = element_text(size = 16)
+  ) +
+  facet_wrap(~mRNA) 
+
+# save PDF
+pdf(filename_pdf, width = 6, height = 6)
+print(p)
+dev.off()
+
+# save SVG
+svglite(filename_svg, width = 6, height = 6)
+print(p)
+dev.off()
+
+```
+
+
+
+
+
+### Save session info
+
+
+```{r}
+
+sessionInfo()
+
+```
+
+

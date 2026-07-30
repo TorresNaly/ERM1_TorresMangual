@@ -259,12 +259,14 @@ head(bmk1_norm_total)
 ## Visualize how normalization is affecting y-axis
 
 ```{r}
-ggplot(data = bmk1_norm_total, aes(x = aligned_row, y = normalized_intensity, 
+normalized_linescan <- ggplot(data = bmk1_norm_total, aes(x = aligned_row, y = normalized_intensity, 
                                      group = interaction(date, embryoID, channel))) +
   geom_line(aes(color = interaction(date, embryoID, channel)), alpha = 0.5) +
   facet_wrap(~ channel + treatment) +
   guides(color = "none") +
   theme_bw()
+
+normalized_linescan
 ```
 
 ```{r}
@@ -387,7 +389,7 @@ e <- ggplot(data = foldChange_calc, aes(x = as.factor(treatment), y = log(fc_enr
   labs(y = "log2 FoldChange Enrichment of mRNA \n(mRNA intensity at 0 / mean mRNA intensity at -50 and 50)", x = "mRNA") +
   theme_classic(base_size = 12)
 
-e
+#e
 
 getwd()
 
@@ -402,6 +404,7 @@ foldChange_calc %>%
     median_val = median(log(fc_enrich, base = 2), na.rm = TRUE),
     max_val    = max(log(fc_enrich, base = 2), na.rm = TRUE)
   )
+
 ```
 ```{r}
 foldChange_calc %>%
@@ -528,7 +531,28 @@ stats_ttest <- foldChange_calc %>%
 stats_ttest
 ```
 
+---
 
+## Export plots and stats
+
+```{r export_outputs}
+
+today      <- format(Sys.Date(), "%y%m%d")
+output_dir <- "../03_output"
+dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
+
+ggsave(file.path(output_dir, paste0(today, "_boxplot_merged.svg")), plot = d,
+       width = 12, height = 7)
+ggsave(file.path(output_dir, paste0(today, "_linescan_individual.svg")), plot = normalized_linescan,
+       width = 14, height = 12)
+ggsave(file.path(output_dir, paste0(today, "_mean_signal_linscan.svg")), plot = a,
+       width = 14, height = 12)
+
+write_csv(stats_wilcox, file.path(output_dir, paste0(today, "_pairwise_wilcoxon_stats.csv")))
+
+cat("Exported to:", normalizePath(output_dir), "\n")
+
+```
 
 ## Session info
 

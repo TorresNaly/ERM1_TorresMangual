@@ -1,3 +1,0 @@
-channel,.y.,group1,group2,n1,n2,statistic,p,p.adj,p.adj.signif
-ch1,log2_fc,L4440,bmk-1,22,26,286,1,1,ns
-ch2,log2_fc,L4440,bmk-1,22,26,401,0.0168,0.0336,*

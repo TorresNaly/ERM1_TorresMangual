@@ -28,6 +28,8 @@ Erin Osborne Nishimura
   - [Merged and averaged data](#merged-and-averaged-data)
   - [Stats](#stats)
   - [Rep- and n-values](#rep--and-n-values)
+  - [2-cell embryos selected for each
+    replicate](#2-cell-embryos-selected-for-each-replicate)
 - [Session info](#session-info)
 
 ## Load the libraries
@@ -61,7 +63,7 @@ Nocodazole was working by reporting the TBB-2::GFP patterning.
 
 ``` r
 # import the data
-control_1 <- read.table(file = "../01_input/2025-03-13_1033_datafile_for_220914_0uM_Noco_wNT002_Rep1.txt", header = FALSE, sep = "\t")
+control_1 <- read.table(file = "../01_input/2026-03-13_1033_datafile_for_220914_0uM_Noco_wNT002_Rep1.txt", header = FALSE, sep = "\t")
 control_2 <- read.table(file = "../01_input/2026-03-13_0121_datafile_for_231112_0uM_Noco_wNT002_Rep2.txt", header = FALSE, sep = "\t")
 
 test_1 <- read.table(file = "../01_input/2026-03-14_0622_datafile_for_220914_150uM_Noco_wNT002_Rep1.txt", header = FALSE, sep = "\t")
@@ -96,27 +98,7 @@ colnames(test_4) <- c("file", "channel", col_times)
 #dim(test_4)
 
 # Example of what this looks like...
-control_1[1:7,1:8]
-```
-
-    ##                                          file channel         1          2
-    ## 1                                        file channel     0.000     0.1072
-    ## 2 220914_permed_wNT002_0uM_Noco_09_R3D_D3D.dv     ch2  4927.838  4955.0391
-    ## 3 220914_permed_wNT002_0uM_Noco_09_R3D_D3D.dv     ch1  3282.429  3204.0681
-    ## 4 220914_permed_wNT002_0uM_Noco_11_R3D_D3D.dv     ch2  6553.232  6475.7100
-    ## 5 220914_permed_wNT002_0uM_Noco_11_R3D_D3D.dv     ch1 11180.594 10908.9131
-    ## 6 220914_permed_wNT002_0uM_Noco_16_R3D_D3D.dv     ch2  4500.523  4653.0015
-    ## 7 220914_permed_wNT002_0uM_Noco_16_R3D_D3D.dv     ch1  6357.355  6320.0615
-    ##            3          4          5         6
-    ## 1     0.2144     0.3215     0.4287    0.5359
-    ## 2  4944.1055  4942.7622  4938.8066 4930.8765
-    ## 3  3141.3899  3096.0930  3082.9082 3110.7231
-    ## 4  6447.5361  6479.0288  6555.7827 6661.5508
-    ## 5 10611.4062 10339.7393 10037.0146 9899.0576
-    ## 6  4767.8940  4797.5332  4711.6953 4564.0063
-    ## 7  6328.0981  6306.6831  6297.7476 6301.1558
-
-``` r
+#control_1[1:7,1:8]
 #control_2[1:9,1:8]
 #test_1[1:3,1:8]
 #test_2[1:9,1:8]
@@ -133,12 +115,7 @@ Merge the datasets together
 
 ``` r
 # Extract out the salient information from the filename and pivot the data longer - "permed" version
-control_1_exp <- control_1[2:dim(control_1)[1],] %>%
-  separate_wider_delim(file, delim = "_", names = c("date", NA, "strain", "conc", NA, "embryoID", NA, NA)) %>%
-  pivot_longer(cols = `1`:`333`, names_to = "xpoint", values_to = "intensity") %>%
-  mutate(unique_id = paste(date, strain, conc, embryoID, channel, sep = "_"))
-
-test_1_exp <- test_1[2:dim(test_1)[1],1:335] %>%
+control_1_exp <- control_1[2:dim(control_1)[1],1:335] %>%
   separate_wider_delim(file, delim = "_", names = c("date", NA, "strain", "conc", NA, "embryoID", NA, NA)) %>%
   pivot_longer(cols = `1`:`333`, names_to = "xpoint", values_to = "intensity") %>%
   mutate(unique_id = paste(date, strain, conc, embryoID, channel, sep = "_"))
@@ -148,6 +125,14 @@ control_2_exp <- control_2[2:dim(control_2)[1],1:335] %>%
   separate_wider_delim(file, delim = "_", names = c("date", "strain", "conc", NA, "embryoID", NA, NA)) %>%
   pivot_longer(cols = `1`:`333`, names_to = "xpoint", values_to = "intensity") %>%
   mutate(unique_id = paste(date, strain, conc, embryoID, channel, sep = "_"))
+
+
+test_1_exp <- test_1[2:dim(test_1)[1],1:335] %>%
+  separate_wider_delim(file, delim = "_", names = c("date", NA, "strain", "conc", NA, "embryoID", NA, NA)) %>%
+  pivot_longer(cols = `1`:`333`, names_to = "xpoint", values_to = "intensity") %>%
+  mutate(unique_id = paste(date, strain, conc, embryoID, channel, sep = "_"))
+
+
 
 test_2_exp <- test_2[2:dim(test_2)[1],1:335] %>%
   separate_wider_delim(file, delim = "_", names = c("date", "strain", "conc", NA, "embryoID", NA, NA)) %>%
@@ -246,8 +231,8 @@ table(nocodazole_norm_total$channel, nocodazole_norm_total$conc)
 
     ##      
     ##        0uM 150uM
-    ##   ch1 2331  5328
-    ##   ch2 2331  5328
+    ##   ch1 3330  5328
+    ##   ch2 3330  5328
 
 ``` r
 head(nocodazole_norm_total)
@@ -409,7 +394,7 @@ summary(log(foldChange_calc$fc_enrich, base = 2))
 ```
 
     ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
-    ## -0.13913  0.05686  0.13908  0.22562  0.21840  1.50658
+    ## -0.13913  0.01306  0.12552  0.22447  0.22114  1.50658
 
 ``` r
 # plot the data - I picked two different ways to display the data
@@ -418,7 +403,7 @@ summary(log(foldChange_calc$fc_enrich, base = 2))
 d <- ggplot(data = foldChange_calc, aes(x = as.factor(channel), y = log(fc_enrich, base = 2), fill = conc))+
   geom_boxplot(outlier.shape = NA)+
   geom_jitter(position=position_jitterdodge())+
-  scale_y_continuous(limits = c(-0.5, 1.75)) +
+  scale_y_continuous(limits = c(-0.5, 2)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   scale_fill_manual(values = c("0uM" = "darkgray", "150uM" = "#2989ca"))+
   labs(y = "log2 FoldChange Enrichment of mRNA \n(mRNA intensity at 0 / mean mRNA intensity at -100 and 100)", x = "mRNA") +
@@ -459,10 +444,10 @@ stats_wilcox
 ```
 
     ## # A tibble: 2 × 10
-    ##   channel .y.   group1 group2    n1    n2 statistic       p   p.adj p.adj.signif
-    ##   <fct>   <chr> <chr>  <chr>  <int> <int>     <dbl>   <dbl>   <dbl> <chr>       
-    ## 1 ch1     fc_e… 0uM    150uM      7    16        62 0.720   0.720   ns          
-    ## 2 ch2     fc_e… 0uM    150uM      7    16       101 0.00148 0.00295 **
+    ##   channel .y.    group1 group2    n1    n2 statistic       p  p.adj p.adj.signif
+    ##   <fct>   <chr>  <chr>  <chr>  <int> <int>     <dbl>   <dbl>  <dbl> <chr>       
+    ## 1 ch1     fc_en… 0uM    150uM     10    16        76 0.856   0.856  ns          
+    ## 2 ch2     fc_en… 0uM    150uM     10    16       131 0.00605 0.0121 *
 
 ### Save the plots
 
@@ -571,16 +556,68 @@ write.table(stats_wilcox, file = filename, sep = "\t", quote = FALSE, row.names 
 noco_metadata <- nocodazole_norm_total %>% 
   select("strain", "date", "conc", "embryoID", "channel")
 
+# pick only the unique ones
+noco_metadata <- unique(noco_metadata)
+
+#dim(noco_metadata)
 #str(noco_metadata)
 # head(noco_metadata)
 
 # tabulate the number of n-values. Divide by 2 because both set-3 and erm-1 are both counted as a data point
 rep_and_n1 <- table(noco_metadata$conc, noco_metadata$date)/2
 
+rep_and_n1
+```
+
+    ##        
+    ##         220914 230210 231112 231114
+    ##   0uM        6      0      4      0
+    ##   150uM      1      5      8      2
+
+``` r
 # Save the rep- and n-values:
 today <- format(Sys.Date(), "%y%m%d")
 filename <- paste("../04_outputData/", today, "_data4_noco_n_linescan.txt", sep = "")
 write.table(rep_and_n1, file = filename, sep = "\t", quote = FALSE, row.names = TRUE)
+```
+
+### 2-cell embryos selected for each replicate
+
+``` r
+# what are the names of the embryos for each replicate?
+
+# use this
+#dim(noco_metadata)
+noco_metadata_unique <- unique(noco_metadata)
+#dim(noco_metadata_unique)
+
+# capture the list of embryos used
+embryoLists <- noco_metadata_unique %>%
+  group_by(strain, date, conc, channel) %>%
+  summarise(embryoIDList = list(embryoID), .groups = "drop") %>%
+  rowwise() %>% 
+  mutate(embryo_names = paste(embryoIDList, collapse = ", ")) %>% 
+  ungroup() %>%
+  select(-embryoIDList)
+
+head(embryoLists)
+```
+
+    ## # A tibble: 6 × 5
+    ##   strain date   conc  channel embryo_names          
+    ##   <chr>  <chr>  <chr> <chr>   <chr>                 
+    ## 1 wNT002 220914 0uM   ch1     09, 10, 11, 15, 16, 18
+    ## 2 wNT002 220914 0uM   ch2     09, 10, 11, 15, 16, 18
+    ## 3 wNT002 220914 150uM ch1     25                    
+    ## 4 wNT002 220914 150uM ch2     25                    
+    ## 5 wNT002 230210 150uM ch1     06, 07, 08, 09, 11    
+    ## 6 wNT002 230210 150uM ch2     06, 07, 08, 09, 11
+
+``` r
+# Save the embryo numbers:
+today <- format(Sys.Date(), "%y%m%d")
+filename <- paste("../04_outputData/", today, "_data5_noco_embryos_selected.txt", sep = "")
+write.table(embryoLists, file = filename, sep = "\t", quote = FALSE, row.names = FALSE)
 ```
 
 ## Session info

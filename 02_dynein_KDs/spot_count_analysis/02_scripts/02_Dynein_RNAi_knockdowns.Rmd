@@ -197,6 +197,19 @@ ggsave("/Users/nalytorres/Library/CloudStorage/OneDrive-Colostate/01_EON_Lab/01_
 ```
 
 
+```{r}
+# Mean and SD summary by condition and mRNA target
+mean_sd_summary <- df_long %>%
+  group_by(subdirectory, mRNA) %>%
+  summarise(
+    mean_total_molecules = mean(total_molecules, na.rm = TRUE),
+    sd_total_molecules = sd(total_molecules, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+mean_sd_summary
+```
+
 set3_mRNA:
 
 DHC-1 (KD): median ≈ 497 molecules

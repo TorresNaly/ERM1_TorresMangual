@@ -32,15 +32,16 @@ Note: channel 1 = set-3 mRNA | channel 2 = erm-1 mRNA
 L4440 control files are loaded once and shared across all treatment comparisons.
 
 ```{r import}
-
+# Get directory of the currently active R script
+script_dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
 # from the script folder, go up one folder and into 01_input
-input_dir <- normalizePath(file.path(script_dir, "..", "01_input"))
+input_dir <- normalizePath(file.path( "..", "01_input"))
 
 cat("Input directory:", input_dir, "\n")
 
 col_times <- paste(rep(1:333), sep = "")
 
-# L4440
+# L4440ls
 control_1 <- read.table(
   file.path(input_dir, "2026-6-22_1458_datafile_for_230713_L4440_RNAi_rep1.txt"),
   header = FALSE,
@@ -474,30 +475,33 @@ Ratio of normalized intensity at position 0 versus the mean of positions
 (consistent with membrane localization).
 
 ```{r}
+#treatment_order <- c("L4440", "klp-9", "bmk-1", "klp-18", "klp-19", "unc-116")
+treatment_order <- c("unc-116","klp-19",  "klp-18","bmk-1","klp-9", "L4440")
+peaks_and_valleys <- norm_total %>%
+  filter(aligned_row %in% c(-100, 0, 100))
 
-# peaks_and_valleys <- norm_total %>%
-#   filter(aligned_row %in% c(-100, 0, 100))
-# 
-# nest_pandv <- peaks_and_valleys %>%
-#   group_by(date, treatment, embryoID, channel) %>%
-#   nest()
-# 
-# my_calc2 <- function(df) {
-#   df$normalized_intensity[2] /
-#     mean(c(df$normalized_intensity[1], df$normalized_intensity[3]))
-# }
-# 
-# foldChange_calc <- nest_pandv %>%
-#   mutate(fc_enrich = map_dbl(data, my_calc2)) %>%
-#   mutate(
-#     log2_fc        = log(fc_enrich, base = 2),
-#     treatment_type = ifelse(treatment == "L4440", "L4440", "RNAi"),
-#     treatment      = factor(treatment, levels = treatment_order)
-#   )
-# 
-# summary(foldChange_calc$log2_fc)
-# 
-# foldChange_calc
+nest_pandv <- peaks_and_valleys %>%
+  group_by(date, treatment, embryoID, channel) %>%
+  nest()
+
+my_calc2 <- function(df) {
+  df$normalized_intensity[2] /
+    mean(c(df$normalized_intensity[1], df$normalized_intensity[3]))
+}
+
+foldChange_calc <- nest_pandv %>%
+  filter(treatment %in% treatment_order) %>%
+  mutate(treatment = factor(treatment, levels = treatment_order)) %>%
+  mutate(fc_enrich = map_dbl(data, my_calc2)) %>%
+  mutate(
+    log2_fc        = log(fc_enrich, base = 2),
+    treatment_type = ifelse(treatment == "L4440", "L4440", "RNAi"),
+    treatment      = factor(treatment, levels = treatment_order)
+  )
+
+summary(foldChange_calc$log2_fc)
+
+foldChange_calc
 
 ```
 
@@ -505,85 +509,133 @@ Ratio of normalized intensity at position 0 versus the mean of positions
 
 ```{r boxplot_merged, fig.height = 6, fig.width = 8}
 
-# l4440_ch2_ref <- foldChange_calc %>%
-#   ungroup() %>%
-#   filter(treatment == "L4440", channel == "ch2") %>%
-#   summarize(med = median(log2_fc, na.rm = TRUE)) %>%
-#   mutate(channel = "ch2")
-# 
-# p_merged <- ggplot(foldChange_calc,
-#                    aes(x = treatment,
-#                        y = log2_fc,
-#                        fill = treatment_type)) +
-#   geom_boxplot(outlier.shape = NA, width = 0.6) +
-#   geom_jitter(aes(color = treatment_type),
-#               position = position_jitterdodge(jitter.width = 0.5),
-#               size = 1.5, alpha = 0.7) +
-#   scale_fill_manual(
-#     values = type_colors,
-#     labels = c("L4440" = "L4440 control", "RNAi" = "RNAi treatment")
-#   ) +
-#   scale_color_manual(
-#     values = c("L4440" = "gray30", "RNAi" = "#1a6fa0"),
-#     guide  = "none"
-#   ) +
-#   geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
-#   scale_y_continuous(limits = c(-0.5, 1.5)) +
-#   facet_wrap(~ channel, labeller = labeller(channel = channel_labels)) +
-#   labs(
-#     title = "log2 enrichment at position 0 vs ±100",
-#     x     = "Treatment",
-#     y     = "log2 (intensity at 0 / mean intensity at ±100)",
-#     fill  = NULL
-#   ) +
-#   theme_classic(base_size = 12) +
-#   theme(
-#     axis.text.x     = element_text(angle = 35, hjust = 1, face = "italic"),
-#     strip.text      = element_text(face = "bold"),
-#     legend.position = "top"
-#   )
-# 
-# p_merged
+l4440_ch2_ref <- foldChange_calc %>%
+  ungroup() %>%
+  filter(treatment == "L4440", channel == "ch2") %>%
+  summarize(med = median(log2_fc, na.rm = TRUE)) %>%
+  mutate(channel = "ch2")
+
+p_merged <- ggplot(foldChange_calc,
+                   aes(x = treatment,
+                       y = log2_fc,
+                       fill = treatment_type)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6) +
+  geom_jitter(aes(color = treatment_type),
+              position = position_jitterdodge(jitter.width = 0.5),
+              size = 1.5, alpha = 0.7) +
+  scale_fill_manual(
+    values = type_colors,
+    labels = c("L4440" = "L4440 control", "RNAi" = "RNAi treatment")
+  ) +
+  scale_color_manual(
+    values = c("L4440" = "gray30", "RNAi" = "#1a6fa0"),
+    guide  = "none"
+  ) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  scale_y_continuous(limits = c(-0.5, 1.5)) +
+  facet_wrap(~ channel, labeller = labeller(channel = channel_labels)) +
+  labs(
+    title = "log2 enrichment at position 0 vs ±100",
+    x     = "Treatment",
+    y     = "log2 (intensity at 0 / mean intensity at ±100)",
+    fill  = NULL
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    axis.text.x     = element_text(angle = 35, hjust = 1, face = "italic"),
+    strip.text      = element_text(face = "bold"),
+    legend.position = "top"
+  )
+
+p_merged
 
 ```
+
+
+
+
+```{r boxplot_merged, fig.height = 6, fig.width = 8}
+
+l4440_ch2_ref <- foldChange_calc %>%
+  ungroup() %>%
+  filter(treatment == "L4440", channel == "ch2") %>%
+  summarize(med = median(log2_fc, na.rm = TRUE)) %>%
+  mutate(channel = "ch2")
+
+p_merged <- ggplot(foldChange_calc,
+                   aes(x = treatment,
+                       y = log2_fc,
+                       fill = treatment_type)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6) +
+  geom_jitter(aes(color = treatment_type),
+              position = position_jitterdodge(jitter.width = 0.5),
+              size = 1.5, alpha = 0.7) +
+  scale_fill_manual(
+    values = type_colors,
+    labels = c("L4440" = "L4440 control", "RNAi" = "RNAi treatment")
+  ) +
+  scale_color_manual(
+    values = c("L4440" = "gray30", "RNAi" = "#1a6fa0"),
+    guide  = "none"
+  ) +
+  scale_y_continuous(limits = c(-0.5, 1.5), position = "right") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  facet_wrap(~ channel, labeller = labeller(channel = channel_labels)) +
+  labs(
+    title = "log2 enrichment at position 0 vs ±100",
+    x     = "Treatment",
+    y     = "log2 (intensity at 0 / mean intensity at ±100)",
+    fill  = NULL
+  ) +
+  coord_flip() +
+  theme_classic(base_size = 12) +
+  theme(
+    axis.text.y     = element_text(face = "italic"),
+    strip.text      = element_text(face = "bold"),
+    legend.position = "top"
+  )
+
+p_merged
+```
+
 
 ### 3b. Merged boxplot, x-axis by channel, faceted by treatment
 
 ```{r boxplot_by_channel, fig.height = 6, fig.width = 14}
 
-# p_by_channel <- ggplot(foldChange_calc,
-#                        aes(x = channel,
-#                            y = log2_fc,
-#                            fill = treatment_type)) +
-#   geom_boxplot(outlier.shape = NA, width = 0.6) +
-#   geom_jitter(aes(color = treatment_type),
-#               position = position_jitterdodge(jitter.width = 0.2),
-#               size = 1.5, alpha = 0.7) +
-#   scale_fill_manual(
-#     values = type_colors,
-#     labels = c("L4440" = "L4440 control", "RNAi" = "RNAi treatment")
-#   ) +
-#   scale_color_manual(
-#     values = c("L4440" = "gray30", "RNAi" = "#1a6fa0"),
-#     guide  = "none"
-#   ) +
-#   scale_x_discrete(labels = channel_labels) +
-#   geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
-#   scale_y_continuous(limits = c(-0.5, 1.5)) +
-#   facet_wrap(~ treatment, nrow = 2) +
-#   labs(
-#     title = "log2 enrichment at position 0 vs ±100: split by channel",
-#     x     = "mRNA channel",
-#     y     = "log2 (intensity at 0 / mean intensity at ±100)",
-#     fill  = NULL
-#   ) +
-#   theme_classic(base_size = 12) +
-#   theme(
-#     strip.text      = element_text(face = "bold.italic"),
-#     legend.position = "top"
-#   )
-# 
-# p_by_channel
+p_by_channel <- ggplot(foldChange_calc,
+                       aes(x = channel,
+                           y = log2_fc,
+                           fill = treatment_type)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6) +
+  geom_jitter(aes(color = treatment_type),
+              position = position_jitterdodge(jitter.width = 0.2),
+              size = 1.5, alpha = 0.7) +
+  scale_fill_manual(
+    values = type_colors,
+    labels = c("L4440" = "L4440 control", "RNAi" = "RNAi treatment")
+  ) +
+  scale_color_manual(
+    values = c("L4440" = "gray30", "RNAi" = "#1a6fa0"),
+    guide  = "none"
+  ) +
+  scale_x_discrete(labels = channel_labels) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  scale_y_continuous(limits = c(-0.5, 1.5)) +
+  facet_wrap(~ treatment, nrow = 2) +
+  labs(
+    title = "log2 enrichment at position 0 vs ±100: split by channel",
+    x     = "mRNA channel",
+    y     = "log2 (intensity at 0 / mean intensity at ±100)",
+    fill  = NULL
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    strip.text      = element_text(face = "bold.italic"),
+    legend.position = "top"
+  )
+
+p_by_channel
 
 ```
 

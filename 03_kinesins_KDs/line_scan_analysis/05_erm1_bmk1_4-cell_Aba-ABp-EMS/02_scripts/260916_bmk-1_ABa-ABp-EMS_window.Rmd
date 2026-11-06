@@ -383,6 +383,59 @@ normalized_linescan <- ggplot(data = bmk1_norm_total, aes(x = aligned_row, y = n
 normalized_linescan
 ```
 
+
+```{r}
+normalized_linescan <- ggplot(
+  data = bmk1_norm_total,
+  aes(
+    x = aligned_row,
+    y = normalized_intensity,
+    group = interaction(date, embryoID, channel)
+  )
+) +
+  geom_line(
+    aes(color = channel),
+    alpha = 0.5
+  ) +
+  scale_color_manual(
+    values = c("ch1" = "black", "ch2" = "#2189ce")
+  ) +
+  facet_wrap(~ treatment) +
+  labs(color = NULL) +
+  theme_bw()
+
+normalized_linescan <- normalized_linescan +
+  theme(
+    text = element_text(size = 16),
+    axis.title = element_text(size = 16),
+    axis.text = element_text(size = 14),
+    strip.text = element_text(size = 16, face = "bold"),
+    legend.text = element_text(size = 14)
+  )
+
+normalized_linescan
+normalized_linescan
+
+ggsave(
+  "../03_output/4-cell_bmk1_normalized_linescan.svg",
+  plot = normalized_linescan,
+  width = 10,
+  height = 5,
+  device = "svg"
+)
+
+
+
+
+```
+
+
+```{r}
+unique(bmk1_norm_total$channel)
+```
+
+
+
 ```{r kinesins_mean_overlaid, fig.height = 3, fig.width = 7}
 
 # treatment_colors <- c(
